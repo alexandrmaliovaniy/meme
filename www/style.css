@@ -1,0 +1,131 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#wrapper {
+    float: left;
+    width: 100%;
+}
+
+#wrapper #control {
+    float: left;
+    width: 40%;
+    padding-left: 5%;
+    padding-top: 50px;
+}
+
+#wrapper #control .line {
+    float: left;
+    width: 100%;
+    height: 40px;
+    line-height: 40px;
+    box-shadow: 2px 2px 5px #ccc;
+    margin-top: 20px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+#wrapper #control .line .lineValue {
+    float: left;
+    width: calc(100% - 80px);
+    padding-left: 5%;
+}
+#wrapper #control .line .lineRemove, #wrapper #control .line .lineEdit {
+    float: left;
+    width: 40px;
+    height: 100%;
+    color: #fff;
+    text-align: center;
+    line-height: 40px;
+    cursor: pointer;
+    user-select: none;
+    transition: .2s;
+}
+#wrapper #control .line .lineEdit {
+    background: rgb(32, 179, 32);
+}
+#wrapper #control .line .lineEdit:hover {
+    background: rgb(60, 230, 60);
+}
+#wrapper #control .line .lineEdit:active {
+    background: rgb(29, 129, 29);
+}
+#wrapper #control .line .lineRemove {
+    background: rgb(255, 50, 50);
+}
+#wrapper #control .line .lineRemove:hover {
+    background: rgb(255, 79, 79);
+}
+#wrapper #control .line .lineRemove:active {
+    background: rgb(212, 29, 29);
+}
+
+#wrapper #control .inputField {
+    float: left;
+    width: 100%;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px #ccc;
+    height: 40px;
+    overflow: hidden;
+    font-family: Arial !important;
+    
+}
+#wrapper #control .inputField input, #wrapper #control .inputField button {
+    float: left;
+    height: 100%;
+    border: none;
+    outline: none;
+}
+#wrapper #control .inputField input {
+    padding-left: 5%;
+    font-size: 16px;
+    width: calc(100% - 40px);
+}
+#wrapper #control .inputField button {
+    width: 40px;
+    text-align: center;
+    line-height: 40px;
+    transition: .2s;
+}
+#wrapper #control .inputField button:hover{
+    background: rgb(168, 168, 168);
+}
+#wrapper #control .inputField button:active {
+    background: rgb(80, 80, 80);
+    color: #fff;
+}
+#wrapper #render {
+    float: left;
+    width: 60%;
+    padding-left: 10%;
+    padding-right: 10%;
+    padding-top: 50px;
+}
+#wrapper #render #view {
+    float: left;
+    position: relative;
+    width: 100%;
+    padding-top: 100%;
+    background: #000;
+}
+#wrapper #render #view input, #wrapper #render #view canvas {
+    margin-top: -100%;
+    position: absolute;
+    float: left;
+}
+#wrapper #render #view input {
+    width: 100%;
+    height: 100%;
+}
+
+#wrapper #render button {
+    float: left;
+    width: 100px;
+    height: 40px;
+    margin-top: 10px;
+    margin-left: calc(50% - 50px);
+}

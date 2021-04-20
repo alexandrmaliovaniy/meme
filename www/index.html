@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div id="wrapper">
+        <div id="control">
+            <!-- <div class="line">
+                <span class="lineValue">Hello world</span>
+                <span class="lineEdit">✎</span>
+                <span class="lineRemove">✕</span>
+            </div> -->
+            <div class="inputField">
+                <input type="text" id="newLine">
+                <button id="addNewLine">+</button>
+            </div>
+        </div>
+        <div id="render">
+            <div id="view">
+                <input type="file" id="file">
+            </div>
+            <button onclick="CompileGIF()">🎴 Download</button>
+        </div>
+    </div>
+    <script src="./libs/LZWEncoder.js"></script>
+    <script src="./libs/NeuQuant.js"></script>
+    <script src="./libs/GIFEncoder.js"></script>
+    <script src="./libs/b64.js"></script>
+    <script src="./main.js"></script>
+</body>
+</html>
