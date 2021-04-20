@@ -1,50 +1,171 @@
-const imageInput = document.getElementById("file");
+const view = document.getElementById("view");
 
-const {width, height} = window.getComputedStyle(imageInput);
+const {width, height} = window.getComputedStyle(view);
 
 let canvas = document.createElement('canvas');
-
-canvas.width = Number(width.slice(0, -2));
-canvas.height = Number(height.slice(0, -2));
-
-let ctx = canvas.getContext('2d');
 
 const newLine = document.getElementById('newLine');
 const addNewLine = document.getElementById('addNewLine');
 
-const control = document.getElementById('control');
+const list = document.getElementById('list');
 const inputField = document.getElementById('inputField');
 
-let userImage = null;
-const allResolution = [0, 0, canvas.width, canvas.height];
+let currentPicture = null;
 
-const offsetX = canvas.width / 10;
-const offsetY = canvas.height / 10;
-const textHeight = 0.15;
-const outlineWidth = 3;
-const outlineOffset = 5;
-const outlineBorders = outlineWidth + outlineOffset;
-const fontSize = 48;
-const delay = 2000;
+class Picture {
+    constructor() {
+        this.canvas = document.createElement('canvas');
+        this.canvas.width = Number(width.slice(0, -2));
+        this.canvas.height = Number(height.slice(0, -2));
+        this.ctx = this.canvas.getContext('2d');
+        this.frames = [];
+        this.img = null;
+        this.props = {
+            offsetX: this.canvas.width / 10,
+            offsetY: this.canvas.height / 10,
+            textHeight: 0.15,
+            outlineWidth: 3,
+            outlineOffset: 5,
+            fontSize: 48,
+            delay: 2000,
+        }
+        this.props.outlineBorders = this.props.outlineWidth + this.props.outlineOffset;
+    }
+    Display() {
+        currentPicture = this;
 
+        const view = document.getElementById('view');
+        view.innerHTML = "";
 
-const frames = [];
+        if (this.img) {
+            view.appendChild(this.canvas);
+        } else {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.id = 'file';
+            input.addEventListener('change', (e) => {
+                const reader = new FileReader();
+                const file = e.target.files[0];
+                reader.onload = () => {
+                    this.img = document.createElement('img');
+                    this.img.src = reader.result;
+                    this.img.onload = () => {
+                        this.DrawImage(this.img);
+                        input.replaceWith(this.canvas);
+                    }
+                }
+                reader.readAsDataURL(file);
+            });
+            view.appendChild(input);
+        }
+        document.querySelector("#render > button").onclick = () => this.CompileGIF();
+        list.innerHTML = "";
 
-imageInput.addEventListener('change', async function(e) {
-    const reader = new FileReader();
-
-    const file = e.target.files[0];
-
-    reader.onload = () => {
-        userImage = document.createElement('img');
-        userImage.src = reader.result;
-        userImage.onload = () => {
-            DrawImage(userImage);
-            imageInput.replaceWith(canvas);
+        for (let i = 0; i < this.frames.length; i++) {
+            list.appendChild(this.frames[i]);
         }
     }
-    reader.readAsDataURL(file);
-})
+    DrawImage(img) {
+        const scaleX = this.canvas.height / img.height;
+        const newWidth = img.width * scaleX;
+        const offsetX = (this.canvas.width - newWidth) / 2;
+        this.ctx.drawImage(img, offsetX, 0, this.canvas.width - offsetX * 2, this.canvas.height);
+    }
+    async UpdateCanvas(cb = function() {}) {
+        const newCanvas = document.createElement('canvas');
+        newCanvas.width = this.canvas.width;
+        newCanvas.height = this.canvas.height;
+        const newCtx = newCanvas.getContext('2d');
+        const oldCanv = this.canvas;
+        this.canvas = newCanvas;
+        this.ctx = newCtx;
+        this.DrawImage(this.img);
+        for (let i = 0; i < this.frames.length; i++) {
+            if (this.frames[i]) {
+                await this.AddLine(this.frames[i].line);
+                cb(newCtx);
+            }
+        }
+        oldCanv.replaceWith(this.canvas);
+    }
+    Append(item) {
+        item.frameId = this.frames.length;
+        item.querySelector('.lineEdit').onclick = async () => {
+            const val = item.querySelector('.lineValue');
+            val.setAttribute("contenteditable", "true");
+            val.focus();
+            val.onblur = async () => {
+                val.setAttribute("contenteditable", "false");
+                item.line = val.innerText;
+                await this.UpdateCanvas();
+            }
+        }
+        item.querySelector('.lineRemove').onclick = async () => {
+            this.frames[item.frameId] = null;
+            item.remove();
+            await this.UpdateCanvas();
+        }
+        this.frames.push(item);
+    }
+    async AddLine(line) {
+        const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+
+        const resWidth = imageData.width - this.props.offsetX * 2;
+        const resHeight = imageData.height - this.props.offsetY - this.canvas.height * this.props.textHeight;
+    
+    
+        const resized = await resizeImageData(imageData, resWidth, resHeight);
+    
+        this.ctx.fillStyle = "black";
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    
+        this.ctx.strokeStyle = "white";
+        this.ctx.lineWidth = this.props.outlineWidth;
+        this.ctx.strokeRect(this.props.offsetX - this.props.outlineOffset, this.props.offsetY - this.props.outlineOffset, resWidth + 2 * this.props.outlineOffset, resHeight + 2 * this.props.outlineOffset);
+    
+        
+        this.ctx.putImageData(resized, this.props.offsetX, this.props.offsetY);
+        this.ctx.fillStyle = "White";
+        this.ctx.font = `${this.props.fontSize}px Times New Roman`;
+        this.ctx.textAlign = "center";
+        const [text, size] = this.MeasureText(line, 48);
+        this.ctx.font = `${size}px Times New Roman`;
+        const computedTextHeight = this.canvas.height * this.props.textHeight;
+        for (let i = 0; i < text.length; i++) {
+            this.ctx.fillText(text[i], this.canvas.width / 2, this.canvas.height - computedTextHeight / 2 + this.props.fontSize / 2 + (i - text.length / 2) * this.props.fontSize / 1.2);
+        }
+    }
+    // works for 1-2 lines
+    MeasureText(text, fontSize) {
+        this.ctx.font = `${fontSize} Times New Roman`;
+        const metrics = this.ctx.measureText(text);
+        if (metrics.width > this.canvas.width - 50) {
+            fontSize-=8;
+            let [topHalf, topSize] = this.MeasureText(text.slice(0, text.length / 2), fontSize);
+            let [botHalf, botSize] = this.MeasureText(text.slice(text.length / 2, text.length), fontSize);
+            return [[...topHalf, ...botHalf], Math.min(topSize, botSize)];
+        }
+        return [[text], fontSize];
+    }
+    async CompileGIF() {
+        if (!this.img) return;
+        let encoder = new GIFEncoder();
+        encoder.setRepeat(0);
+        encoder.setDelay(this.props.delay);
+        encoder.start();
+        await this.UpdateCanvas((context) => {
+            encoder.addFrame(context);
+        })
+        encoder.finish();
+        encoder.download("default.gif");
+    }
+}
+
+currentPicture = new Picture();
+currentPicture.Display();
+
+
+
 
 addNewLine.addEventListener('click', SumbitEvent);
 newLine.addEventListener('keyup', async function(e) {
@@ -55,56 +176,15 @@ newLine.addEventListener('keyup', async function(e) {
 
 async function SumbitEvent() {
     const value = newLine.value;
-    if (value.trim().length == 0 || !userImage) return;
+    if (value.trim().length == 0 || !currentPicture.img) return;
 
     const newItem = GetNewItemList(value);
-    newItem.frameId = frames.length;
-    frames.push(newItem);
-    control.append(newItem);
+    currentPicture.Append(newItem);
+    list.appendChild(newItem);
 
     newLine.value = "";
-    await AddLine(value, ctx);
+    await currentPicture.AddLine(value);
     newLine.focus();
-}
-
-async function RedrawAll(cb = function(){}) {
-    const newCanvas = document.createElement('canvas');
-    newCanvas.width = Number(width.slice(0, -2));
-    newCanvas.height = Number(height.slice(0, -2));
-
-    const newCtx = newCanvas.getContext('2d');
-    newCtx.drawImage(userImage, ...allResolution);
-    for (let i = 0; i < frames.length; i++) {
-        if (frames[i]) {
-            await AddLine(frames[i].line, newCtx);
-            cb(newCtx);
-        }
-    }
-    return [newCanvas, newCtx];
-} 
-
-async function RemoveItem(el) {
-    frames[el.parentNode.frameId] = null;
-    el.parentNode.remove();
-    await UpdateCanvas();
-}
-
-function EditItem(el) {
-    const val = el.parentNode.querySelector('.lineValue');
-    val.setAttribute("contenteditable", "true");
-    val.focus();
-    val.onblur = async () => {
-        val.setAttribute("contenteditable", "false");
-        el.parentNode.line = val.innerText;
-        await UpdateCanvas()
-    }
-}
-
-async function UpdateCanvas() {
-    const [newCanvas, newCtx] = await RedrawAll();
-    canvas.replaceWith(newCanvas);
-    canvas = newCanvas;
-    ctx = newCtx;
 }
 
 function GetNewItemList(value) {
@@ -116,67 +196,6 @@ function GetNewItemList(value) {
     <span class="lineEdit" onClick="EditItem(this)">✎</span>
     <span class="lineRemove" onClick="RemoveItem(this)">✕</span>`;
     return item;
-}
-
-async function AddLine(line, ctx) {
-    const imageData = ctx.getImageData(...allResolution);
-
-    const resWidth = imageData.width - offsetX * 2;
-    const resHeight = imageData.height - offsetY - canvas.height * textHeight;
-
-
-    const resized = await resizeImageData(imageData, resWidth, resHeight);
-
-    ctx.fillStyle = "black";
-    ctx.fillRect(...allResolution);
-
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = outlineWidth;
-    ctx.strokeRect(offsetX - outlineOffset, offsetY - outlineOffset, resWidth + 2 * outlineOffset, resHeight + 2 * outlineOffset);
-
-    
-    ctx.putImageData(resized, offsetX, offsetY);
-    ctx.fillStyle = "White";
-    ctx.font = `${fontSize}px Times New Roman`;
-    ctx.textAlign = "center";
-    const [text, size] = MeasureText(line, 48);
-    ctx.font = `${size}px Times New Roman`;
-    const computedTextHeight = canvas.height * textHeight;
-    for (let i = 0; i < text.length; i++) {
-        ctx.fillText(text[i], canvas.width / 2, canvas.height - computedTextHeight / 2 + fontSize / 2 + (i - text.length / 2) * fontSize / 1.2);
-    }
-}
-
-// works for 1-2 lines
-function MeasureText(text, fontSize) {
-    ctx.font = `${fontSize} Times New Roman`;
-    const metrics = ctx.measureText(text);
-    if (metrics.width > canvas.width - 50) {
-        fontSize-=8;
-        let [topHalf, topSize] = MeasureText(text.slice(0, text.length / 2), fontSize);
-        let [botHalf, botSize] = MeasureText(text.slice(text.length / 2, text.length), fontSize);
-        return [[...topHalf, ...botHalf], Math.min(topSize, botSize)];
-    }
-    return [[text], fontSize];
-}
-
-function DrawImage(img) {
-    const scaleX = canvas.height / img.height;
-    const newWidth = img.width * scaleX;
-    const offsetX = (canvas.width - newWidth) / 2;
-    ctx.drawImage(img, offsetX, 0, canvas.width - offsetX * 2, canvas.height);
-    // ctx.drawImage(img, ...allResolution);
-}
-async function CompileGIF() {
-    let encoder = new GIFEncoder();
-    encoder.setRepeat(0);
-    encoder.setDelay(delay);
-    encoder.start();
-    await RedrawAll((context) => {
-        encoder.addFrame(context);
-    })
-    encoder.finish();
-    encoder.download("default.gif");
 }
 
 // https://gist.github.com/mauriciomassaia/b9e7ef6667a622b104c00249f77f8c03
