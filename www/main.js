@@ -2,18 +2,32 @@ const view = document.getElementById("view");
 
 const {width, height} = window.getComputedStyle(view);
 
-let canvas = document.createElement('canvas');
+const header = document.getElementById('header'); 
 
 const newLine = document.getElementById('newLine');
 const addNewLine = document.getElementById('addNewLine');
 
+const newTab = document.getElementById('newTab');
+
 const list = document.getElementById('list');
 const inputField = document.getElementById('inputField');
 
+// const pictures = [];
 let currentPicture = null;
 
 class Picture {
     constructor() {
+        this.tab = document.createElement('div');
+        this.tab.classList.add('tab');
+        this.tab.innerText = "Tab";
+        this.tab.onclick = () => {
+            if (currentPicture) {
+                currentPicture.tab.classList.remove('active');
+            }
+            this.Display();
+        }
+        header.insertBefore(this.tab, newTab);
+
         this.canvas = document.createElement('canvas');
         this.canvas.width = Number(width.slice(0, -2));
         this.canvas.height = Number(height.slice(0, -2));
@@ -30,9 +44,11 @@ class Picture {
             delay: 2000,
         }
         this.props.outlineBorders = this.props.outlineWidth + this.props.outlineOffset;
+        // pictures.push(this);
     }
     Display() {
         currentPicture = this;
+        this.tab.classList.add('active');
 
         const view = document.getElementById('view');
         view.innerHTML = "";
@@ -161,8 +177,13 @@ class Picture {
     }
 }
 
+newTab.onclick = () => {
+    new Picture();
+}
+
 currentPicture = new Picture();
-currentPicture.Display();
+currentPicture.Display(); 
+
 
 
 
