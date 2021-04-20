@@ -12,7 +12,7 @@ const newTab = document.getElementById('newTab');
 const list = document.getElementById('list');
 const inputField = document.getElementById('inputField');
 
-// const pictures = [];
+const pictures = [];
 let currentPicture = null;
 
 class Picture {
@@ -44,7 +44,7 @@ class Picture {
             delay: 2000,
         }
         this.props.outlineBorders = this.props.outlineWidth + this.props.outlineOffset;
-        // pictures.push(this);
+        pictures.push(this);
     }
     Display() {
         currentPicture = this;
@@ -186,6 +186,20 @@ currentPicture.Display();
 
 
 
+document.getElementById("compileAll").onclick = async () => {
+    let encoder = new GIFEncoder();
+    encoder.setRepeat(0);
+    encoder.setDelay(2000);
+    encoder.start();
+    for (let i = 0; i < pictures.length; i++) {
+        if (!pictures[i].img) continue;
+        await pictures[i].UpdateCanvas((context) => {
+            encoder.addFrame(context);
+        })
+    }
+    encoder.finish();
+    encoder.download("default.gif");
+}
 
 
 addNewLine.addEventListener('click', SumbitEvent);
