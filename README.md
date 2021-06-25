@@ -1,4 +1,4 @@
 # Meme
 
-* Vanilla js
+* Pure js
 * JsGif: https://github.com/antimatter15/jsgif
