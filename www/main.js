@@ -50,8 +50,7 @@ class Picture {
         currentPicture = this;
         this.tab.classList.add('active');
 
-        const view = document.getElementById('view');
-        view.innerHTML = "";
+        view.innerHTML = '<img src="./src/file.svg">';
 
         if (this.img) {
             view.appendChild(this.canvas);
@@ -72,6 +71,9 @@ class Picture {
                 }
                 reader.readAsDataURL(file);
             });
+            view.onclick = function() {
+                input.click();
+            }
             view.appendChild(input);
         }
         document.querySelector("#render > button").onclick = () => this.CompileGIF();

@@ -166,16 +166,26 @@ body {
     position: relative;
     width: 100%;
     padding-top: 100%;
-    background: #000;
+    background: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
 }
 #wrapper #render #view input, #wrapper #render #view canvas {
     margin-top: -100%;
     position: absolute;
     float: left;
 }
+#wrapper #render #view img {
+    float: left;
+    margin-top: -100%;
+    width: 120px;
+    height: 120px;
+    color: #fff;
+}
 #wrapper #render #view input {
-    width: 100%;
-    height: 100%;
+    visibility: hidden;
 }
 
 #wrapper #render button {
